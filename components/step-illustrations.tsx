@@ -32,6 +32,7 @@ export function StepProfileCard({ className }: IllustrationProps) {
 
         {/* Card */}
         <rect
+          className="step-profile-card"
           x="12"
           y="14"
           width="296"
@@ -43,7 +44,7 @@ export function StepProfileCard({ className }: IllustrationProps) {
         />
 
         {/* Avatar */}
-        <g transform="translate(28, 36)">
+        <g className="step-profile-avatar" transform="translate(28, 36)">
           <rect width="120" height="148" rx="18" fill="url(#profile-avatar-bg)" />
           {/* Face */}
           <g transform="translate(60, 78)">
@@ -63,8 +64,8 @@ export function StepProfileCard({ className }: IllustrationProps) {
             <circle cx="-11" cy="-3.5" r="1" fill="#fff" />
             <circle cx="13" cy="-3.5" r="1" fill="#fff" />
             {/* Cheeks */}
-            <ellipse cx="-18" cy="10" rx="5" ry="3" fill="#f88aae" opacity="0.6" />
-            <ellipse cx="18" cy="10" rx="5" ry="3" fill="#f88aae" opacity="0.6" />
+            <ellipse cx="-18" cy="10" rx="5" ry="3" fill="#f88aae" opacity="0.6" className="step-profile-cheek-left" />
+            <ellipse cx="18" cy="10" rx="5" ry="3" fill="#f88aae" opacity="0.6" className="step-profile-cheek-right" />
             {/* Smile */}
             <path
               d="M-7 14 C -3 18, 3 18, 7 14"
@@ -78,21 +79,21 @@ export function StepProfileCard({ className }: IllustrationProps) {
 
         {/* Profile lines */}
         <g transform="translate(166, 50)" fontFamily="ui-rounded, system-ui, sans-serif">
-          <g>
+          <g className="step-profile-badge-1">
             <rect x="0" y="0" width="20" height="20" rx="6" fill="#ede9fe" />
             <text x="10" y="14" fontSize="11" textAnchor="middle">👤</text>
             <text x="28" y="15" fontSize="13" fontWeight="900" fill="#19154c">
               Emma
             </text>
           </g>
-          <g transform="translate(0, 36)">
+          <g className="step-profile-badge-2" transform="translate(0, 36)">
             <rect x="0" y="0" width="20" height="20" rx="6" fill="#ffe4ec" />
             <text x="10" y="14" fontSize="11" textAnchor="middle">🎂</text>
             <text x="28" y="15" fontSize="13" fontWeight="900" fill="#19154c">
               6 years old
             </text>
           </g>
-          <g transform="translate(0, 72)">
+          <g className="step-profile-badge-3" transform="translate(0, 72)">
             <rect x="0" y="0" width="20" height="20" rx="6" fill="#ffe7d4" />
             <text x="10" y="14" fontSize="11" textAnchor="middle">❤️</text>
             <text x="28" y="13" fontSize="11" fontWeight="800" fill="#5b4d8a">
@@ -137,10 +138,10 @@ export function StepMicScene({ className }: IllustrationProps) {
         </defs>
 
         {/* Glow halo */}
-        <circle cx="160" cy="120" r="100" fill="url(#mic-glow)" />
+        <circle className="step-mic-glow" cx="160" cy="120" r="100" fill="url(#mic-glow)" />
 
         {/* Mic stand base */}
-        <g transform="translate(160, 130)">
+        <g className="step-mic-body" transform="translate(160, 130)">
           {/* Body */}
           <ellipse cx="0" cy="0" rx="42" ry="50" fill="url(#mic-body)" />
           {/* Grill highlight */}
@@ -167,17 +168,17 @@ export function StepMicScene({ className }: IllustrationProps) {
         </g>
 
         {/* Floating prompt bubbles */}
-        <g transform="translate(56, 56)">
+        <g className="step-mic-bubble-1" transform="translate(56, 56)">
           <ellipse cx="0" cy="0" rx="28" ry="22" fill="#fff" stroke="#e8d9ff" strokeWidth="2" />
           <text x="0" y="6" fontSize="22" textAnchor="middle">🐉</text>
           <path d="M16 18 L26 26 L18 22 Z" fill="#fff" stroke="#e8d9ff" strokeWidth="2" strokeLinejoin="round" />
         </g>
-        <g transform="translate(266, 64)">
+        <g className="step-mic-bubble-2" transform="translate(266, 64)">
           <ellipse cx="0" cy="0" rx="28" ry="22" fill="#fff" stroke="#e8d9ff" strokeWidth="2" />
           <text x="0" y="6" fontSize="22" textAnchor="middle">🐱</text>
           <path d="M-16 18 L-26 26 L-18 22 Z" fill="#fff" stroke="#e8d9ff" strokeWidth="2" strokeLinejoin="round" />
         </g>
-        <g transform="translate(266, 168)">
+        <g className="step-mic-bubble-3" transform="translate(266, 168)">
           <ellipse cx="0" cy="0" rx="28" ry="22" fill="#fff" stroke="#e8d9ff" strokeWidth="2" />
           <text x="0" y="6" fontSize="22" textAnchor="middle">🚀</text>
           <path d="M-18 -16 L-26 -22 L-16 -20 Z" fill="#fff" stroke="#e8d9ff" strokeWidth="2" strokeLinejoin="round" />
@@ -185,9 +186,9 @@ export function StepMicScene({ className }: IllustrationProps) {
 
         {/* Sparkles */}
         <g fill="#ffd65c">
-          <path d="M48 130 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" />
-          <path d="M270 124 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" />
-          <path d="M180 26 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" fill="#f9b6c8" />
+          <path className="step-mic-sparkle-1" d="M48 130 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" />
+          <path className="step-mic-sparkle-2" d="M270 124 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" />
+          <path className="step-mic-sparkle-3" d="M180 26 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" fill="#f9b6c8" />
         </g>
       </svg>
     </div>
@@ -230,11 +231,13 @@ export function StepBookScene({ className }: IllustrationProps) {
           </defs>
           {/* Book cover behind */}
           <path
+            className="step-book-cover"
             d="M28 36 Q 160 18, 292 36 L 296 188 Q 160 168, 24 188 Z"
             fill="url(#book-cover)"
           />
           {/* Pages */}
           <path
+            className="step-book-page"
             d="M40 44 Q 160 30, 280 44 L 280 178 Q 160 162, 40 178 Z"
             fill="url(#book-page)"
             stroke="#e8d9ff"
@@ -242,6 +245,7 @@ export function StepBookScene({ className }: IllustrationProps) {
           />
           {/* Spine */}
           <path
+            className="step-book-spine"
             d="M160 32 Q 160 110, 160 174"
             stroke="#7c3aed"
             strokeWidth="2.4"
@@ -252,6 +256,7 @@ export function StepBookScene({ className }: IllustrationProps) {
 
         {/* Left page: dragon-rider scene image clipped into the page area */}
         <div
+          className="step-book-image-container"
           style={{
             position: "absolute",
             left: "14.5%",
@@ -274,6 +279,7 @@ export function StepBookScene({ className }: IllustrationProps) {
 
         {/* Right page: faux text lines */}
         <div
+          className="step-book-lines-container"
           style={{
             position: "absolute",
             right: "14.5%",
@@ -287,6 +293,7 @@ export function StepBookScene({ className }: IllustrationProps) {
           {[100, 92, 86, 78, 88, 70].map((w, i) => (
             <div
               key={i}
+              className="step-book-line"
               style={{
                 width: `${w}%`,
                 height: "6px",

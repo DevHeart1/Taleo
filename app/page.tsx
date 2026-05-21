@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { LandingPage } from "@/components/landing-page";
 
 export const metadata: Metadata = {
-  title: "Taleo — Bedtime stories starring your kid",
+  title: "Taleo - Make bedtime easier with stories starring your kid",
   description:
-    "Taleo turns one tap and a few spoken words into a fully illustrated, narrated bedtime book starring your child as the hero. No screens to tap. No keyboards. Just imagination, out loud.",
+    "Taleo turns your child's spoken idea into a narrated, illustrated bedtime book where they are the hero, helping bedtime feel calmer, safer, and easier to say yes to.",
   openGraph: {
-    title: "Taleo — Bedtime stories starring your kid",
+    title: "Taleo - Make bedtime easier with stories starring your kid",
     description:
-      "Voice-first AI bedtime books your kid will ask for twice. Try free tonight.",
+      "Voice-first bedtime books that reduce bedtime friction and turn your child into the hero. Try free tonight.",
     type: "website",
   },
 };
