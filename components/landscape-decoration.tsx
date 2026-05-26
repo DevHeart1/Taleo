@@ -150,7 +150,7 @@ export function HillsBand({ className }: SvgProps) {
   return (
     <svg
       viewBox="0 0 1440 360"
-      preserveAspectRatio="xMidYEnd slice"
+      preserveAspectRatio="xMidYMax slice"
       className={className}
       aria-hidden="true"
       focusable="false"

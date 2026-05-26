@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { transcribeWithElevenLabs } from "@/lib/elevenlabs";
+import { transcribeWithGemini } from "@/lib/gemini-stt";
 
 export const runtime = "nodejs";
 
@@ -11,12 +12,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing audio blob" }, { status: 400 });
   }
 
-  const transcript = await transcribeWithElevenLabs(audio);
+  let transcript = await transcribeWithElevenLabs(audio);
+
+  if (transcript === null) {
+    // Fall back to Gemini transcription if ElevenLabs is not configured
+    transcript = await transcribeWithGemini(audio);
+  }
 
   if (transcript === null) {
     return NextResponse.json(
       {
-        error: "ELEVENLABS_API_KEY is not configured",
+        error: "Neither ElevenLabs nor Gemini STT is configured",
         transcript: "",
       },
       { status: 501 },
