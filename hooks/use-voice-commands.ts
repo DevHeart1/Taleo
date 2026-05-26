@@ -156,7 +156,9 @@ export function useVoiceCommands({ enabled = true, lang = "en-US", onCommand }: 
 
   useEffect(() => {
     if (window.sessionStorage.getItem(VOICE_COMMANDS_ENABLED_KEY) === "1") {
-      setActivationCount((count) => Math.max(count, 1));
+      setTimeout(() => {
+        setActivationCount((count) => Math.max(count, 1));
+      }, 0);
     }
   }, []);
 
@@ -181,7 +183,11 @@ export function useVoiceCommands({ enabled = true, lang = "en-US", onCommand }: 
 
   useEffect(() => {
     if (!enabled || activationCount === 0) {
-      if (!enabled) setStatus("idle");
+      if (!enabled) {
+        setTimeout(() => {
+          setStatus("idle");
+        }, 0);
+      }
       return;
     }
 
@@ -282,8 +288,10 @@ export function useVoiceCommands({ enabled = true, lang = "en-US", onCommand }: 
 
     if (!Recognition) {
       if (!navigator.mediaDevices || !("MediaRecorder" in window)) {
-        setStatus("unsupported");
-        setLastError("Voice commands are not supported in this browser.");
+        setTimeout(() => {
+          setStatus("unsupported");
+          setLastError("Voice commands are not supported in this browser.");
+        }, 0);
         return;
       }
       startFallbackRecognition();

@@ -16,7 +16,9 @@ export default function SettingsPage() {
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
     if (!sb) {
-      setReady(true);
+      setTimeout(() => {
+        setReady(true);
+      }, 0);
       return;
     }
 

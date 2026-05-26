@@ -19,7 +19,7 @@ export function LibraryPage({ initialPosts }: LibraryPageProps) {
   const [category, setCategory] = useState<string>("all");
   const [loading, setLoading] = useState(false);
 
-  const loadPosts = useCallback(async (s: SortOption, cat: string) => {
+  const loadPosts = async (s: SortOption, cat: string) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ sort: s });
@@ -32,11 +32,17 @@ export function LibraryPage({ initialPosts }: LibraryPageProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    void loadPosts(sort, category);
-  }, [sort, category, loadPosts]);
+  const handleSortChange = (newSort: SortOption) => {
+    setSort(newSort);
+    void loadPosts(newSort, category);
+  };
+
+  const handleCategoryChange = (newCat: string) => {
+    setCategory(newCat);
+    void loadPosts(sort, newCat);
+  };
 
   return (
     <div className="sw-page">
@@ -89,14 +95,14 @@ export function LibraryPage({ initialPosts }: LibraryPageProps) {
             <button
               type="button"
               className={`sw-filter-tab${sort === "newest" ? " sw-filter-tab-active" : ""}`}
-              onClick={() => setSort("newest")}
+              onClick={() => handleSortChange("newest")}
             >
               Newest
             </button>
             <button
               type="button"
               className={`sw-filter-tab${sort === "most_reacted" ? " sw-filter-tab-active" : ""}`}
-              onClick={() => setSort("most_reacted")}
+              onClick={() => handleSortChange("most_reacted")}
             >
               Most loved
             </button>
@@ -108,7 +114,7 @@ export function LibraryPage({ initialPosts }: LibraryPageProps) {
             <button
               type="button"
               className={`sw-category-chip${category === "all" ? " sw-category-chip-active" : ""}`}
-              onClick={() => setCategory("all")}
+              onClick={() => handleCategoryChange("all")}
             >
               All
             </button>
@@ -117,7 +123,7 @@ export function LibraryPage({ initialPosts }: LibraryPageProps) {
                 key={cat}
                 type="button"
                 className={`sw-category-chip${category === cat ? " sw-category-chip-active" : ""}`}
-                onClick={() => setCategory(cat)}
+                onClick={() => handleCategoryChange(cat)}
               >
                 {cat}
               </button>

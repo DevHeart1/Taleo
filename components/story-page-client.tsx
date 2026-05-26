@@ -17,8 +17,10 @@ export function StoryPageClient({ storyId, serverSession }: StoryPageClientProps
 
   useEffect(() => {
     if (serverSession) {
-      setSession(serverSession);
-      setIsLoading(false);
+      setTimeout(() => {
+        setSession(serverSession);
+        setIsLoading(false);
+      }, 0);
       return;
     }
 
@@ -26,12 +28,13 @@ export function StoryPageClient({ storyId, serverSession }: StoryPageClientProps
     const browserStories = getStoriesFromBrowser();
     const browserStory = browserStories.find(story => story.id === storyId);
     
-    if (browserStory) {
-      console.log('Found story in browser storage:', storyId);
-      setSession(browserStory);
-    }
-    
-    setIsLoading(false);
+    setTimeout(() => {
+      if (browserStory) {
+        console.log('Found story in browser storage:', storyId);
+        setSession(browserStory);
+      }
+      setIsLoading(false);
+    }, 0);
   }, [storyId, serverSession]);
 
   if (isLoading) {

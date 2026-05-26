@@ -56,7 +56,13 @@ export function ReactionBar({ postId, initialReactions, variant = "full" }: Reac
     mountedRef.current = true;
     // Check if this session already reacted
     const reacted = getReactedPosts();
-    if (reacted.has(postId)) setHasReacted(true);
+    if (reacted.has(postId)) {
+      setTimeout(() => {
+        if (mountedRef.current) {
+          setHasReacted(true);
+        }
+      }, 0);
+    }
     return () => {
       mountedRef.current = false;
     };

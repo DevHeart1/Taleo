@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Check, Globe, Loader2, X } from "lucide-react";
 import { autoFillPublishForm, STORY_CATEGORIES } from "@/lib/story-world-autofill";
 import type { StoryCategory } from "@/lib/story-world";
@@ -135,10 +136,10 @@ export function PublishToWorldModal({
               Other readers can now find, read, and react to your magical story in{" "}
               <strong>Taleo Story World</strong>.
             </p>
-            <a href="/library" className="publish-success-link">
+            <Link href="/library" className="publish-success-link">
               <Globe size={16} />
               Visit Taleo Story World
-            </a>
+            </Link>
             <button type="button" className="publish-success-done" onClick={onClose}>
               Done
             </button>

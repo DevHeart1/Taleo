@@ -57,7 +57,7 @@ export function ChildStoryStage() {
   const [activeLine, setActiveLine] = useState<NarrationLine | null>(null);
   // Story World publish modal
   const [publishModalOpen, setPublishModalOpen] = useState(false);
-  const lastCompletedSessionRef = useRef<StorySession | null>(null);
+  const [lastCompletedSession, setLastCompletedSession] = useState<StorySession | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const startListeningRef = useRef<() => Promise<void>>(async () => {});
@@ -536,7 +536,7 @@ export function ChildStoryStage() {
       setIsGenerating(false);
       setCurrentScene(null);
       // Keep session ref alive for the publish modal before clearing state
-      lastCompletedSessionRef.current = storySession;
+      setLastCompletedSession(storySession);
       setSession(null);
       setCaption("Are you still awake? Want a new story?");
       setActiveLine(null);
@@ -820,6 +820,7 @@ export function ChildStoryStage() {
     clearAssetCaches();
     setStoryEnded(false);
     setSession(null);
+    setLastCompletedSession(null);
     setCurrentScene(null);
     setActiveLine(null);
     setHasStarted(true);
@@ -1152,7 +1153,7 @@ export function ChildStoryStage() {
                     my books
                   </Link>
                   {/* Publish to Story World — only shown after a story completes */}
-                  {storyEnded && lastCompletedSessionRef.current ? (
+                  {storyEnded && lastCompletedSession ? (
                     <button
                       type="button"
                       className="publish-world-button"
@@ -1169,9 +1170,9 @@ export function ChildStoryStage() {
             )}
 
             {/* Story World publish modal */}
-            {publishModalOpen && lastCompletedSessionRef.current ? (
+            {publishModalOpen && lastCompletedSession ? (
               <PublishToWorldModal
-                session={lastCompletedSessionRef.current}
+                session={lastCompletedSession}
                 onClose={() => setPublishModalOpen(false)}
               />
             ) : null}
