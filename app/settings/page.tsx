@@ -6,6 +6,7 @@ import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { TaleoLogo } from "@/components/taleo-logo";
 import { SettingsAuthenticatedPanel } from "@/components/settings-authenticated-panel";
 import { SettingsMagicLinkPanel } from "@/components/settings-magic-link-panel";
+import { StorageSetupButton } from "@/components/storage-setup-button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/auth-browser";
 
 export default function SettingsPage() {
@@ -66,6 +67,10 @@ export default function SettingsPage() {
               <p className="settings-hint">
                 We&apos;ll email you a sign-in link—tap once to personalize Taleo and save books to your account.
               </p>
+              <div style={{ marginTop: "32px" }}>
+                <p className="eyebrow" style={{ marginBottom: "8px" }}>Developer Tools</p>
+                <StorageSetupButton />
+              </div>
             </header>
             <SettingsMagicLinkPanel />
           </div>

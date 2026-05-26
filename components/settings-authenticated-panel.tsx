@@ -10,6 +10,7 @@ import {
   type StoryParentSettings,
 } from "@/lib/story-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase/auth-browser";
+import { StorageSetupButton } from "@/components/storage-setup-button";
 
 const FACE_IMAGE_SIZE = 512;
 
@@ -400,6 +401,11 @@ export function SettingsAuthenticatedPanel({ userEmail }: Props) {
           {savedFlash ? <span className="settings-saved">Saved!</span> : null}
         </div>
       </form>
+
+      <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: "2px dashed rgba(196, 181, 253, 0.4)" }}>
+        <p className="eyebrow" style={{ marginBottom: "12px" }}>Developer Tools</p>
+        <StorageSetupButton />
+      </div>
 
     </div>
   );

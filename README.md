@@ -5,7 +5,7 @@ Taleo is a voice-first, illustrated AI storybook. The child-facing app is design
 ## V1 Scope
 
 - 4-minute stories with 4 generated scenes.
-- OpenAI `gpt-image-1` low-quality images for the first version.
+- Gemini 3 Flash model for story text and Imagen 3.0 for illustrations.
 - ElevenLabs streaming TTS for narrator and character voices.
 - ElevenLabs STT upload route, with browser speech recognition fallback for fast local demos.
 - Supabase persistence when credentials are present, with in-memory demo persistence otherwise.
@@ -21,7 +21,7 @@ npm run dev
 
 Fill in `.env` with:
 
-- `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
 - `ELEVENLABS_API_KEY`
 - ElevenLabs voice IDs, or use the default public demo IDs while prototyping
 - Supabase keys if you want saved stories to persist across server restarts

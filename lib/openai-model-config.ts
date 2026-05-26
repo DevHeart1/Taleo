@@ -1,49 +1,49 @@
 /**
- * Central place for env-driven OpenAI model selection used by story + illustrations.
+ * Central place for env-driven Gemini model selection used by story + illustrations.
  */
 
-export const DEFAULT_OPENAI_STORY_MODEL = "gpt-4.1";
+export const DEFAULT_GEMINI_STORY_MODEL = "gemini-3-flash";
 /**
- * Default image model (`images.generate`) after DALL·E 2/3 sunset on Images API (~May 2026).
- * Prefer `gpt-image-1-mini` for low spend; upgrade via `OPENAI_IMAGE_MODEL=gpt-image-1` etc.
+ * Default image model (`images.generate`)
+ * Prefer `imagen-3.0-generate-002` for high spend/quality.
  */
-export const DEFAULT_OPENAI_IMAGE_MODEL = "gpt-image-1-mini";
+export const DEFAULT_GEMINI_IMAGE_MODEL = "imagen-3.0-generate-002";
 /** Forced model for the "Disney / Pixar 3D animation" style — always max quality. */
-export const PIXAR_IMAGE_MODEL = "gpt-image-1";
+export const PIXAR_IMAGE_MODEL = "imagen-3.0-generate-002";
 
 const DALL_E_2_SIZES = ["256x256", "512x512", "1024x1024"] as const;
 
-/** Maps deprecated Images API models to supported GPT Image slugs (`OPENAI_IMAGE_MODEL` leftovers). */
+/** Maps deprecated Images API models to supported Imagen slugs. */
 export function remapDeprecatedOpenAIImageModels(model: string): string {
   const m = model.trim().toLowerCase();
-  // DALL·E family removed May 2026 — keep old .env entries working without user edits.
-  if (m.startsWith("dall-e-2")) return "gpt-image-1-mini";
-  if (m.startsWith("dall-e-3")) return "gpt-image-1";
+  if (m.startsWith("dall-e-") || m.startsWith("gpt-image-")) {
+    return "imagen-3.0-generate-002";
+  }
   return model.trim();
 }
 
-/** Chat / completions model for story turns (`OPENAI_*`). Not overridden by parent image style UI. */
+/** Chat / completions model for story turns (`GEMINI_*`). */
 export function resolvedStoryModel(): string {
   const raw =
-    process.env.OPENAI_STORY_MODEL?.trim() ||
-    process.env.OPENAI_CHAT_MODEL?.trim();
-  return raw || DEFAULT_OPENAI_STORY_MODEL;
+    process.env.GEMINI_STORY_MODEL?.trim() ||
+    process.env.GEMINI_CHAT_MODEL?.trim();
+  return raw || DEFAULT_GEMINI_STORY_MODEL;
 }
 
 /**
  * Images API model for watercolor / editor defaults (`images.generate` in `generateSceneImage`).
- * Disney–Pixar style in the UI still uses fixed `gpt-image-1`; child-face `images.edit` uses gpt-image-1 tuning.
  */
 export function resolvedImageModel(): string {
   const raw =
-    process.env.OPENAI_IMAGE_MODEL?.trim() || process.env.IMAGE_MODEL?.trim();
-  const slug = raw || DEFAULT_OPENAI_IMAGE_MODEL;
+    process.env.GEMINI_IMAGE_MODEL?.trim() || process.env.IMAGE_MODEL?.trim();
+  const slug = raw || DEFAULT_GEMINI_IMAGE_MODEL;
   return remapDeprecatedOpenAIImageModels(slug);
 }
 
 export function isDallE2Model(model: string): boolean {
   return model.trim().startsWith("dall-e-2");
 }
+
 
 /** Subset passed to `openai.images.generate` beside `prompt`. */
 export type ImageGenerationBase = {

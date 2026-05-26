@@ -117,7 +117,7 @@ Existing stories will be automatically migrated:
 3. Ensure proper voice IDs in voice cast
 
 ### Image Issues
-1. Check OpenAI API key and credits
+1. Check Gemini API key and credits
 2. Verify image upload permissions
 3. Check data URL to blob conversion
 

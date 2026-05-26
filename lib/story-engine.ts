@@ -376,12 +376,15 @@ async function generateFullStoryWithOpenAI(
     useChildAsProtagonist?: boolean;
   },
 ) {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return createFallbackStory(childInput, childName, hints?.useChildAsProtagonist);
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    });
     const response = await openai.chat.completions.create({
       model: resolvedStoryModel(),
       temperature: 0.72,

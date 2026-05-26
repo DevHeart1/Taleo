@@ -313,11 +313,14 @@ export async function generateSceneImage(
     economyGuestMode?: boolean;
   },
 ) {
-  if (!process.env.OPENAI_API_KEY?.trim()) {
-    throw new StoryImageGenerationError("OPENAI_API_KEY is not configured");
+  if (!process.env.GEMINI_API_KEY?.trim()) {
+    throw new StoryImageGenerationError("GEMINI_API_KEY is not configured");
   }
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const openai = new OpenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  });
 
   if (options?.economyGuestMode) {
     const economyPrompt = compactForDallE2("", scene, storyBible);
