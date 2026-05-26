@@ -6,6 +6,7 @@ import {
   ArrowUp,
   BookOpen,
   ChevronLeft,
+  Globe,
   Heart,
   Home,
   Mic,
@@ -13,6 +14,7 @@ import {
   Play,
   Settings,
 } from "lucide-react";
+import { PublishToWorldModal } from "@/components/publish-to-world-modal";
 import { VoiceOrb } from "@/components/voice-orb";
 import { TaleoLogo } from "@/components/taleo-logo";
 import { MagicLoadingScreen } from "@/components/magic-loading-screen";
@@ -53,6 +55,9 @@ export function ChildStoryStage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [activeLine, setActiveLine] = useState<NarrationLine | null>(null);
+  // Story World publish modal
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const lastCompletedSessionRef = useRef<StorySession | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const startListeningRef = useRef<() => Promise<void>>(async () => {});
@@ -530,6 +535,8 @@ export function ChildStoryStage() {
       setHasStarted(false);
       setIsGenerating(false);
       setCurrentScene(null);
+      // Keep session ref alive for the publish modal before clearing state
+      lastCompletedSessionRef.current = storySession;
       setSession(null);
       setCaption("Are you still awake? Want a new story?");
       setActiveLine(null);
@@ -1144,10 +1151,30 @@ export function ChildStoryStage() {
                     <BookOpen size={18} />
                     my books
                   </Link>
+                  {/* Publish to Story World — only shown after a story completes */}
+                  {storyEnded && lastCompletedSessionRef.current ? (
+                    <button
+                      type="button"
+                      className="publish-world-button"
+                      onClick={() => setPublishModalOpen(true)}
+                      aria-label="Publish this story to Taleo Story World"
+                    >
+                      <Globe size={16} />
+                      Publish to Story World
+                    </button>
+                  ) : null}
                   {error ? <strong className="error-pill">{error}</strong> : null}
                 </section>
               </div>
             )}
+
+            {/* Story World publish modal */}
+            {publishModalOpen && lastCompletedSessionRef.current ? (
+              <PublishToWorldModal
+                session={lastCompletedSessionRef.current}
+                onClose={() => setPublishModalOpen(false)}
+              />
+            ) : null}
 
             {shareUrl ? (
               <nav className="bottom-nav" aria-label="Primary">

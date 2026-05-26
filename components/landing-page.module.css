@@ -167,6 +167,26 @@
   color: #11a89b;
 }
 
+.navStoryWorld {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 9px;
+  color: #11a89b !important;
+  font-size: 0.88rem !important;
+  font-weight: 1000 !important;
+  opacity: 1 !important;
+  background: rgba(25, 200, 185, 0.1);
+  border: 1.5px solid rgba(25, 200, 185, 0.35);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.navStoryWorld:hover {
+  background: rgba(25, 200, 185, 0.18) !important;
+  color: #0e8c81 !important;
+}
+
 .navCta,
 .btnPrimary,
 .btnSecondary,

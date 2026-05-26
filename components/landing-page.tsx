@@ -18,6 +18,7 @@ import {
   Check,
   Clock,
   Gift,
+  Globe,
   Heart,
   HeartCrack,
   Lock,
@@ -330,6 +331,9 @@ export function LandingPage() {
             <a href="#how">How it works</a>
             <a href="#worlds">Story worlds</a>
             <a href="#pricing">Pricing</a>
+            <Link href="/library" className={styles.navStoryWorld}>
+              <Globe size={14} /> Story World
+            </Link>
           </div>
           <Link className={styles.navCta} href="/play">
             Start free <Icon name="icon-helicopter" size={18} bounce />
@@ -610,6 +614,9 @@ export function LandingPage() {
           <span>Taleo - Made with care for bedtime</span>
           <div className={styles.footerLinks}>
             <Link href="/play">Start a story</Link>
+            <Link href="/library">
+              <Globe size={13} /> Story World
+            </Link>
             <Link href="/stories">My library</Link>
             <Link href="/settings">Parent settings</Link>
             <a href="mailto:hello@taleo.app">Contact</a>
