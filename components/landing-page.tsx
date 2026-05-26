@@ -4,6 +4,15 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Button,
+  Card,
+  Collapse,
+  Cursor,
+  Divider,
+  Footer as IslandFooter,
+  Icon,
+} from "animal-island-ui";
+import {
   ArrowRight,
   Cake,
   Check,
@@ -13,9 +22,7 @@ import {
   HeartCrack,
   Lock,
   Mic,
-  Minus,
   Play,
-  Plus,
   Printer,
   ShieldCheck,
   ShieldHalf,
@@ -309,7 +316,8 @@ export function LandingPage() {
   }, []);
 
   return (
-    <main className={styles.page} ref={pageRef}>
+    <Cursor>
+      <main className={styles.page} ref={pageRef}>
       <LandscapeBackdrop />
 
       <div className={styles.container}>
@@ -324,7 +332,7 @@ export function LandingPage() {
             <a href="#pricing">Pricing</a>
           </div>
           <Link className={styles.navCta} href="/play">
-            Start free <ArrowRight size={16} />
+            Start free <Icon name="icon-helicopter" size={18} bounce />
           </Link>
         </nav>
 
@@ -382,9 +390,13 @@ export function LandingPage() {
                 </div>
               </div>
               <div className={styles.voiceComposer}>
-                <button type="button" aria-label="Preview voice input" tabIndex={-1}>
-                  <Mic size={18} />
-                </button>
+                <Button
+                  type="primary"
+                  icon={<Icon name="icon-chat" size={18} />}
+                  htmlType="button"
+                  aria-label="Preview voice input"
+                  tabIndex={-1}
+                />
                 <div className={styles.voiceWaves}>
                   {Array.from({ length: 18 }).map((_, i) => (
                     <span key={i} />
@@ -417,11 +429,12 @@ export function LandingPage() {
             <h2 className={styles.sectionTitle}>
               Four tiny moments that change the whole bedtime mood.
             </h2>
+            <Divider type="wave-yellow" className={styles.sectionDivider} />
           </header>
 
           <div className={styles.bentoGrid} ref={bentoRef}>
             {BENTO_CARDS.map(({ icon: Icon, title, caption, metric, metricLabel, tone, Art }, index) => (
-              <article className={`${styles.bentoCard} ${tone}`} key={title}>
+              <Card className={`${styles.bentoCard} ${tone}`} color="default" key={title}>
                 <div className={styles.bentoCardTop}>
                   <span className={styles.bentoIcon}>
                     <Icon size={22} />
@@ -440,7 +453,7 @@ export function LandingPage() {
                 </div>
                 <div className={styles.bentoGlow} />
                 <span className={`${styles.bentoSpark} ${styles[`bentoSpark${index + 1}`]}`} />
-              </article>
+              </Card>
             ))}
           </div>
         </section>
@@ -453,16 +466,17 @@ export function LandingPage() {
             <h2 className={styles.sectionTitle}>
               A premium storybook studio, simple enough for bedtime.
             </h2>
+            <Divider type="line-teal" className={styles.sectionDivider} />
           </header>
 
           <div className={styles.steps}>
             {STEPS.map(({ n, title, body, Art }) => (
-              <article className={styles.step} key={n}>
+              <Card className={styles.step} color="app-yellow" key={n}>
                 <span className={styles.stepNumber}>{n}</span>
                 <Art className={styles.stepArt} />
                 <h3>{title}</h3>
                 <p>{body}</p>
-              </article>
+              </Card>
             ))}
           </div>
         </section>
@@ -475,6 +489,7 @@ export function LandingPage() {
             <h2 className={styles.sectionTitle}>
               The fantasy changes every night. The comfort stays the same.
             </h2>
+            <Divider type="line-yellow" className={styles.sectionDivider} />
           </header>
 
           <div className={styles.themeRail}>
@@ -501,12 +516,14 @@ export function LandingPage() {
             <h2 className={styles.sectionTitle}>
               Start free. Upgrade when it becomes the routine.
             </h2>
+            <Divider type="line-brown" className={styles.sectionDivider} />
           </header>
 
           <div className={styles.pricing}>
             {PLANS.map((plan) => (
-              <article
+              <Card
                 key={plan.name}
+                color={plan.featured ? "app-blue" : "default"}
                 className={`${styles.priceCard} ${
                   plan.featured ? styles.priceFeatured : ""
                 }`.trim()}
@@ -537,7 +554,7 @@ export function LandingPage() {
                 {plan.finePrint ? (
                   <p className={styles.priceFinePrint}>{plan.finePrint}</p>
                 ) : null}
-              </article>
+              </Card>
             ))}
           </div>
         </section>
@@ -548,34 +565,34 @@ export function LandingPage() {
               <Sparkles size={12} /> FAQ
             </span>
             <h2 className={styles.sectionTitle}>Parent questions, answered plainly.</h2>
+            <Divider type="wave-yellow" className={styles.sectionDivider} />
           </header>
 
           <div className={styles.faq}>
             {FAQS.map((faq, i) => {
               const FaqIcon = faq.icon;
               return (
-                <details className={styles.faqItem} key={faq.q} open={i === 0}>
-                  <summary>
-                    <span className={styles.faqQuestion}>{faq.q}</span>
-                    <span className={styles.faqToggle} aria-hidden="true">
-                      <Plus className={styles.faqPlus} size={14} />
-                      <Minus className={styles.faqMinus} size={14} />
-                    </span>
-                  </summary>
-                  <div className={styles.faqBody}>
+                <Collapse
+                  className={styles.faqItem}
+                  key={faq.q}
+                  defaultExpanded={i === 0}
+                  question={<span className={styles.faqQuestion}>{faq.q}</span>}
+                  answer={
+                    <div className={styles.faqBody}>
                     <span className={`${styles.faqAccentIcon} ${faq.iconBg}`}>
                       <FaqIcon size={22} />
                     </span>
                     <p>{faq.a}</p>
-                  </div>
-                </details>
+                    </div>
+                  }
+                />
               );
             })}
           </div>
         </section>
 
         <section className={styles.finalCta}>
-          <div className={styles.finalCtaInner}>
+          <Card className={styles.finalCtaInner} color="app-orange">
             <WandSparkles size={34} />
             <h2>Tonight can feel softer.</h2>
             <p>
@@ -585,10 +602,11 @@ export function LandingPage() {
               <Mic size={20} />
               {PRIMARY_CTA}
             </Link>
-          </div>
+          </Card>
         </section>
 
         <footer className={styles.footer}>
+          <IslandFooter type="sea" className={styles.islandFooter} />
           <span>Taleo - Made with care for bedtime</span>
           <div className={styles.footerLinks}>
             <Link href="/play">Start a story</Link>
@@ -598,6 +616,7 @@ export function LandingPage() {
           </div>
         </footer>
       </div>
-    </main>
+      </main>
+    </Cursor>
   );
 }

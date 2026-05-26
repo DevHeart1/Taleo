@@ -302,7 +302,7 @@ export function SettingsAuthenticatedPanel({ userEmail }: Props) {
 
           <p className="settings-hint">
             {settings.imageStyle === "disney-pixar"
-              ? "Pixar style uses Gemini via Vercel AI Gateway (high visual quality; OpenAI backup is off unless you enable OPENAI_PIXAR_FALLBACK_ENABLED)."
+              ? "Pixar style uses Taleo's built-in Gemini image model with a cinematic 3D art direction."
               : "Higher quality uses more detail (and API cost). Medium is the standard for everyone—we removed the old “Low” tier because it was unreliable with current image models."}
           </p>
           <div

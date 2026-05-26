@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenAI, ThinkingLevel, Type, type Schema } from "@google/genai";
 import { resolvedStoryModel } from "@/lib/openai-model-config";
 import { sanitizeChildInput } from "@/lib/safety";
 import {
@@ -251,6 +251,76 @@ type GeneratedFullStory = {
   }>;
 };
 
+const storyResponseSchema: Schema = {
+  type: Type.OBJECT,
+  required: ["storyBible", "voiceCast", "scenes"],
+  properties: {
+    storyBible: {
+      type: Type.OBJECT,
+      required: ["premise", "protagonist", "setting", "tone", "characterDesigns", "plotSummary"],
+      properties: {
+        premise: { type: Type.STRING },
+        protagonist: { type: Type.STRING },
+        setting: { type: Type.STRING },
+        tone: { type: Type.STRING },
+        characterDesigns: { type: Type.STRING },
+        plotSummary: { type: Type.STRING },
+      },
+    },
+    voiceCast: {
+      type: Type.ARRAY,
+      minItems: "3",
+      maxItems: "5",
+      items: {
+        type: Type.OBJECT,
+        required: ["speakerId", "displayName", "trait"],
+        properties: {
+          speakerId: { type: Type.STRING },
+          displayName: { type: Type.STRING },
+          trait: {
+            type: Type.STRING,
+            format: "enum",
+            enum: ["narrator", "brave", "tiny", "wise", "silly", "gentle"],
+          },
+        },
+      },
+    },
+    scenes: {
+      type: Type.ARRAY,
+      minItems: String(STORY_SCENE_COUNT),
+      maxItems: String(STORY_SCENE_COUNT),
+      items: {
+        type: Type.OBJECT,
+        required: ["title", "summary", "imagePrompt", "lines"],
+        properties: {
+          title: { type: Type.STRING },
+          summary: { type: Type.STRING },
+          imagePrompt: { type: Type.STRING },
+          lines: {
+            type: Type.ARRAY,
+            minItems: "2",
+            maxItems: "4",
+            items: {
+              type: Type.OBJECT,
+              required: ["speakerId", "speakerName", "text", "emotion"],
+              properties: {
+                speakerId: { type: Type.STRING },
+                speakerName: { type: Type.STRING },
+                text: { type: Type.STRING },
+                emotion: {
+                  type: Type.STRING,
+                  format: "enum",
+                  enum: ["warm", "excited", "curious", "gentle", "silly"],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
 function cleanSpeakerId(input: string) {
   return input.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
 }
@@ -349,6 +419,12 @@ function normalizeLines(lines: NarrationLine[], voiceCast: VoiceCastMember[]) {
     });
 }
 
+type StoryGenerationHints = {
+  ageRange: ChildProfile["ageRange"];
+  storyEnergy: "calm" | "balanced" | "silly";
+  useChildAsProtagonist?: boolean;
+};
+
 function storyStyleHints(ageRange: ChildProfile["ageRange"], storyEnergy: "calm" | "balanced" | "silly") {
   const ageLine =
     ageRange === "2-3"
@@ -367,111 +443,116 @@ function storyStyleHints(ageRange: ChildProfile["ageRange"], storyEnergy: "calm"
   return [ageLine, energyLine];
 }
 
-async function generateFullStoryWithOpenAI(
+function createStorySystemInstruction(childName: string, hints?: StoryGenerationHints) {
+  return [
+    ...(hints ? storyStyleHints(hints.ageRange, hints.storyEnergy) : []),
+    "You are an elite preschool picture-book writer and story editor.",
+    hints?.useChildAsProtagonist
+      ? `The child must be the protagonist and main recurring hero. The protagonist's exact name is ${childName}. Keep random magical friends and side characters, but do not replace the child with another main character.`
+      : "Invent a delightful random main character from the child's idea.",
+    "Create one complete, linear, emotionally satisfying 4-minute audio story from the child's idea.",
+    "The story must be fun, coherent, and easy for kids ages 4-7 to follow.",
+    "IMPORTANT TITLE REQUIREMENTS: Create short, catchy, child-friendly titles (3-5 words maximum). Focus on adventure themes and action words, NOT character descriptions. Examples of GOOD titles: 'Dragon Mountain Quest', 'Magic Forest Adventure', 'Treasure Island Mystery', 'Rainbow Castle Journey'. Examples of BAD titles: 'Sunny the Snake's Story', 'A Gentle Curious Snake Who Loves Sunshine', 'The Adventures of a Shy Little Snake'. Never include character descriptions or possessive forms in titles.",
+    "Use narrator lines for exposition and character speaker IDs only for actual character dialogue.",
+    "Use at least two different named character speakers across the story, plus narrator when helpful.",
+    "Every line speakerId must exactly match one speakerId from voiceCast. Do not invent speakerIds inside scenes.",
+    "Never ask the child to choose during the story. No interactive choices.",
+    "Use recurring character designs that can be reused exactly in every image.",
+    "The imagePrompt for each scene must describe only a standalone full-bleed scene illustration. Never ask for a book page, open book, printed page, panels, frames, borders, captions, handwriting or handwriting-like scribbles, fake lettering, scribbled fake words, arrows that point at labels, typography, typography in any signage, typography in any overlays, typography in meme-style captions, typography in infographics.",
+    "For characterDesigns, define stable visual identity: species/body shape, size, colors, facial features, clothing/accessories, and one memorable silhouette detail for every recurring character.",
+    "Keep the content safe: no graphic violence, real-world instructions, medical/legal advice, sexual content, private data, maps, or internet assistant behavior.",
+    "Return only JSON.",
+  ].join(" ");
+}
+
+function createStoryRequestText(childName: string, childInput: string, hints?: StoryGenerationHints) {
+  return JSON.stringify({
+    childName,
+    childInput,
+    targetDurationSeconds: 240,
+    pageCount: STORY_SCENE_COUNT,
+    availableVoices: [
+      {
+        speakerId: "narrator",
+        displayName: "Narrator",
+        trait: "narrator",
+        usage: "Use for all AI narration and non-character lines.",
+      },
+      {
+        speakerId: "hero",
+        displayName: hints?.useChildAsProtagonist ? childName : "Main character",
+        trait: "brave",
+        usage: "Use for the main character dialogue.",
+      },
+      {
+        speakerId: "friend",
+        displayName: "Small friend",
+        trait: "tiny",
+        usage: "Use for a small, cute friend character dialogue.",
+      },
+      {
+        speakerId: "guide",
+        displayName: "Wise guide",
+        trait: "wise",
+        usage: "Use for a calm mentor character dialogue.",
+      },
+      {
+        speakerId: "silly",
+        displayName: "Silly character",
+        trait: "silly",
+        usage: "Use for a playful comic character dialogue.",
+      },
+    ],
+    requiredJsonShape: {
+      storyBible: {
+        premise: "string",
+        protagonist: "string",
+        setting: "string",
+        tone: "string",
+        characterDesigns: "Detailed, reusable visual design bible for every recurring character.",
+        plotSummary: "Complete beginning-middle-end summary.",
+      },
+      voiceCast:
+        "Array of 3-5 cast members. Must include narrator and at least two named character voices. Use stable speakerIds and traits from the available voices.",
+      scenes:
+        `Exactly ${STORY_SCENE_COUNT} pages. Each page has title, summary, imagePrompt, and 2-4 lines. Keep the full story near 4 minutes total. Lines include speakerId, speakerName, text, emotion. CRITICAL: Scene titles must be 3-5 words maximum, focus on action/adventure themes (e.g., 'Dragon Mountain Quest', 'Magic Forest Adventure'), never use character descriptions or possessive forms.`,
+    },
+  });
+}
+
+async function generateFullStoryWithGemini(
   childName: string,
   childInput: string,
-  hints?: {
-    ageRange: ChildProfile["ageRange"];
-    storyEnergy: "calm" | "balanced" | "silly";
-    useChildAsProtagonist?: boolean;
-  },
+  hints?: StoryGenerationHints,
 ) {
   if (!process.env.GEMINI_API_KEY) {
     return createFallbackStory(childInput, childName, hints?.useChildAsProtagonist);
   }
 
   try {
-    const openai = new OpenAI({
+    const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
     });
-    const response = await openai.chat.completions.create({
+    const response = await ai.models.generateContent({
       model: resolvedStoryModel(),
-      temperature: 0.72,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: [
-            ...(hints ? storyStyleHints(hints.ageRange, hints.storyEnergy) : []),
-            "You are an elite preschool picture-book writer and story editor.",
-            hints?.useChildAsProtagonist
-              ? `The child must be the protagonist and main recurring hero. The protagonist's exact name is ${childName}. Keep random magical friends and side characters, but do not replace the child with another main character.`
-              : "Invent a delightful random main character from the child's idea.",
-            "Create one complete, linear, emotionally satisfying 4-minute audio story from the child's idea.",
-            "The story must be fun, coherent, and easy for kids ages 4-7 to follow.",
-            "IMPORTANT TITLE REQUIREMENTS: Create short, catchy, child-friendly titles (3-5 words maximum). Focus on adventure themes and action words, NOT character descriptions. Examples of GOOD titles: 'Dragon Mountain Quest', 'Magic Forest Adventure', 'Treasure Island Mystery', 'Rainbow Castle Journey'. Examples of BAD titles: 'Sunny the Snake's Story', 'A Gentle Curious Snake Who Loves Sunshine', 'The Adventures of a Shy Little Snake'. Never include character descriptions or possessive forms in titles.",
-            "Use narrator lines for exposition and character speaker IDs only for actual character dialogue.",
-            "Use at least two different named character speakers across the story, plus narrator when helpful.",
-            "Every line speakerId must exactly match one speakerId from voiceCast. Do not invent speakerIds inside scenes.",
-            "Never ask the child to choose during the story. No interactive choices.",
-            "Use recurring character designs that can be reused exactly in every image.",
-            "The imagePrompt for each scene must describe only a standalone full-bleed scene illustration. Never ask for a book page, open book, printed page, panels, frames, borders, captions, handwriting or handwriting-like scribbles, fake lettering, scribbled fake words, arrows that point at labels, typography, typography in any signage, typography in any overlays, typography in meme-style captions, typography in infographics.",
-            "For characterDesigns, define stable visual identity: species/body shape, size, colors, facial features, clothing/accessories, and one memorable silhouette detail for every recurring character.",
-            "Keep the content safe: no graphic violence, real-world instructions, medical/legal advice, sexual content, private data, maps, or internet assistant behavior.",
-            "Return only JSON.",
-          ].join(" "),
+      config: {
+        temperature: 1,
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.MEDIUM,
         },
+        responseMimeType: "application/json",
+        responseSchema: storyResponseSchema,
+        systemInstruction: createStorySystemInstruction(childName, hints),
+      },
+      contents: [
         {
           role: "user",
-          content: JSON.stringify({
-            childName,
-            childInput,
-            targetDurationSeconds: 240,
-            pageCount: STORY_SCENE_COUNT,
-            availableVoices: [
-              {
-                speakerId: "narrator",
-                displayName: "Narrator",
-                trait: "narrator",
-                usage: "Use for all AI narration and non-character lines.",
-              },
-              {
-                speakerId: "hero",
-                displayName: hints?.useChildAsProtagonist ? childName : "Main character",
-                trait: "brave",
-                usage: "Use for the main character dialogue.",
-              },
-              {
-                speakerId: "friend",
-                displayName: "Small friend",
-                trait: "tiny",
-                usage: "Use for a small, cute friend character dialogue.",
-              },
-              {
-                speakerId: "guide",
-                displayName: "Wise guide",
-                trait: "wise",
-                usage: "Use for a calm mentor character dialogue.",
-              },
-              {
-                speakerId: "silly",
-                displayName: "Silly character",
-                trait: "silly",
-                usage: "Use for a playful comic character dialogue.",
-              },
-            ],
-            requiredJsonShape: {
-              storyBible: {
-                premise: "string",
-                protagonist: "string",
-                setting: "string",
-                tone: "string",
-                characterDesigns:
-                  "Detailed, reusable visual design bible for every recurring character.",
-                plotSummary: "Complete beginning-middle-end summary.",
-              },
-              voiceCast:
-                "Array of 3-5 cast members. Must include narrator and at least two named character voices. Use stable speakerIds and traits from the available voices.",
-              scenes:
-                `Exactly ${STORY_SCENE_COUNT} pages. Each page has title, summary, imagePrompt, and 2-4 lines. Keep the full story near 4 minutes total. Lines include speakerId, speakerName, text, emotion. CRITICAL: Scene titles must be 3-5 words maximum, focus on action/adventure themes (e.g., 'Dragon Mountain Quest', 'Magic Forest Adventure'), never use character descriptions or possessive forms.`,
-            },
-          }),
+          parts: [{ text: createStoryRequestText(childName, childInput, hints) }],
         },
       ],
     });
 
-    const parsed = JSON.parse(response.choices[0]?.message.content || "{}") as GeneratedFullStory;
+    const parsed = JSON.parse(response.text || "{}") as GeneratedFullStory;
     const generatedBible = parsed.storyBible || {};
     const fallbackBible = createStoryBible(
       childInput,
@@ -534,7 +615,7 @@ async function generateFullStoryWithOpenAI(
       return { bible, voiceCast, scenes };
     }
   } catch (error) {
-    console.error("OpenAI full story generation failed", error);
+    console.error("Gemini full story generation failed", error);
   }
 
   return createFallbackStory(childInput, childName, hints?.useChildAsProtagonist);
@@ -562,7 +643,7 @@ export async function advanceStory(request: StoryTurnRequest): Promise<StoryTurn
   const useChildAsProtagonist = request.useChildAsProtagonist ?? false;
   const intent = safety.status === "allowed" ? safety.sanitizedIntent : safety.childMessage;
   const safeIntent = safety.status === "block" ? "a gentle friendship adventure" : intent;
-  const { bible, voiceCast, scenes } = await generateFullStoryWithOpenAI(childName, safeIntent, {
+  const { bible, voiceCast, scenes } = await generateFullStoryWithGemini(childName, safeIntent, {
     ageRange,
     storyEnergy,
     useChildAsProtagonist,

@@ -1,11 +1,14 @@
 :root {
   color-scheme: light;
-  --ink: #3b2f2f;
-  --paper: #fff7ed;
-  --rose: #fecdd3;
-  --blue: #bfdbfe;
-  --violet: #c4b5fd;
-  --gold: #fde68a;
+  --ink: #725d42;
+  --paper: rgb(247, 243, 223);
+  --rose: #f8a6b2;
+  --blue: #889df0;
+  --violet: #b77dee;
+  --gold: #f7cd67;
+  --animal-teal: #19c8b9;
+  --animal-focus: #ffcc00;
+  --animal-shadow: #bdaea0;
 }
 
 * {
@@ -18,10 +21,10 @@ html {
   margin: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  background: #1f1235;
+  background: #f8f8f0;
   color: var(--ink);
   font-family:
-    ui-rounded, "SF Pro Rounded", "Nunito", "Comic Sans MS", system-ui, sans-serif;
+    "Nunito", "Noto Sans SC", "Zen Maru Gothic", -apple-system, "PingFang SC", sans-serif;
 }
 
 body {
@@ -29,10 +32,10 @@ body {
   min-height: 100%;
   margin: 0;
   overflow: visible;
-  background: #1f1235;
+  background: #f8f8f0;
   color: var(--ink);
   font-family:
-    ui-rounded, "SF Pro Rounded", "Nunito", "Comic Sans MS", system-ui, sans-serif;
+    "Nunito", "Noto Sans SC", "Zen Maru Gothic", -apple-system, "PingFang SC", sans-serif;
 }
 
 a {
@@ -43,6 +46,13 @@ a {
 button,
 input {
   font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--animal-focus);
+  outline-offset: 3px;
 }
 
 .stage {
