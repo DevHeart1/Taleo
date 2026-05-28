@@ -30,6 +30,7 @@ import {
 import { SettingsAvatarLink } from "@/components/settings-avatar-link";
 import { hasRenderableStoryImageUrl } from "@/lib/story-image-utils";
 import "@/lib/browser-speech-recognition";
+import { getDynamicFallbackImage } from "@/lib/story-image-fallback";
 import type {
   BrowserSpeechRecognitionConstructor,
   BrowserSpeechRecognitionEvent,
@@ -199,8 +200,22 @@ export function ChildStoryStage() {
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.92;
-    utterance.pitch = 1.05;
+    utterance.rate = 0.82;
+    utterance.pitch = 0.95;
+
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoices = voices.filter((v) => v.lang.toLowerCase().startsWith("en"));
+    if (englishVoices.length > 0) {
+      const naturalVoice = englishVoices.find((v) => v.name.toLowerCase().includes("natural") || v.name.toLowerCase().includes("neural")) ||
+        englishVoices.find((v) => v.name.toLowerCase().includes("samantha")) ||
+        englishVoices.find((v) => v.name.toLowerCase().includes("google") && !v.name.toLowerCase().includes("low")) ||
+        englishVoices.find((v) => v.name.toLowerCase().includes("online")) ||
+        englishVoices.find((v) => v.lang.toLowerCase().startsWith("en-us")) ||
+        englishVoices[0];
+      if (naturalVoice) {
+        utterance.voice = naturalVoice;
+      }
+    }
 
     return new Promise<void>((resolve) => {
       const finish = () => {
@@ -467,7 +482,8 @@ export function ChildStoryStage() {
 
       if (!imageUrl) {
         console.warn("Story image generation failed, using client-side placeholder image for scene " + scene.id);
-        return CLIENT_PLACEHOLDER_IMAGE;
+        const combinedText = scene.lines.map((line) => line.text).join(" ");
+        return getDynamicFallbackImage(scene.imagePrompt || "", combinedText);
       }
 
       return imageUrl;

@@ -13,6 +13,7 @@ import { type ImageStyle, imageStyleSchema } from "@/lib/story-settings";
 import { saveStorySession } from "@/lib/supabase";
 import { getAuthSessionUser } from "@/lib/supabase/auth-server";
 import { resolveStorySession } from "@/lib/story-session-resolve";
+import { getDynamicFallbackImage } from "@/lib/story-image-fallback";
 
 export const runtime = "nodejs";
 
@@ -111,7 +112,8 @@ export async function POST(request: Request) {
       );
     } catch (error) {
       console.error("[api/story/image] Image generation failed, falling back to placeholder:", error);
-      scene.imageUrl = PLACEHOLDER_IMAGE;
+      const combinedText = scene.lines.map((line) => line.text).join(" ");
+      scene.imageUrl = getDynamicFallbackImage(scene.imagePrompt || "", combinedText);
     }
     session.updatedAt = new Date().toISOString();
     memoryStories.set(session.id, session);

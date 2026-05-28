@@ -75,7 +75,7 @@ export const PLACEHOLDER_IMAGE =
 </svg>`);
 
 export function isPlaceholderImageUrl(imageUrl?: string) {
-  return imageUrl === PLACEHOLDER_IMAGE;
+  return imageUrl === PLACEHOLDER_IMAGE || imageUrl?.startsWith("data:image/svg+xml") === true;
 }
 
 export class StoryImageGenerationError extends Error {

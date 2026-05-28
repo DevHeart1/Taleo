@@ -33,6 +33,7 @@ export const StoryAudioPlayer = forwardRef<StoryAudioPlayerHandle, StoryAudioPla
   const runRef = useRef(0);
   const audioCacheRef = useRef(new Map<string, string>());
   const isPausedRef = useRef(false);
+  const currentSpeechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const fetchLineAudio = useCallback(
     async (sceneIndex: number, lineIndex: number) => {
@@ -83,11 +84,49 @@ export const StoryAudioPlayer = forwardRef<StoryAudioPlayerHandle, StoryAudioPla
     });
   }, []);
 
+  const speakBrowserFallback = useCallback((text: string) => {
+    if (!("speechSynthesis" in window)) return Promise.resolve();
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.82;
+    utterance.pitch = 0.95;
+
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoices = voices.filter((v) => v.lang.toLowerCase().startsWith("en"));
+    if (englishVoices.length > 0) {
+      const naturalVoice = englishVoices.find((v) => v.name.toLowerCase().includes("natural") || v.name.toLowerCase().includes("neural")) ||
+        englishVoices.find((v) => v.name.toLowerCase().includes("samantha")) ||
+        englishVoices.find((v) => v.name.toLowerCase().includes("google") && !v.name.toLowerCase().includes("low")) ||
+        englishVoices.find((v) => v.name.toLowerCase().includes("online")) ||
+        englishVoices.find((v) => v.lang.toLowerCase().startsWith("en-us")) ||
+        englishVoices[0];
+      if (naturalVoice) {
+        utterance.voice = naturalVoice;
+      }
+    }
+
+    return new Promise<void>((resolve) => {
+      const finish = () => {
+        if (currentSpeechUtteranceRef.current === utterance) {
+          currentSpeechUtteranceRef.current = null;
+        }
+        resolve();
+      };
+      currentSpeechUtteranceRef.current = utterance;
+      utterance.onend = finish;
+      utterance.onerror = finish;
+      window.speechSynthesis.speak(utterance);
+      if (isPausedRef.current) window.speechSynthesis.pause();
+    });
+  }, []);
+
   const stop = useCallback(() => {
     runRef.current += 1;
     isPausedRef.current = false;
     audioRef.current?.pause();
     audioRef.current = null;
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setState("idle");
     setNowPlaying("Ready to play this story aloud.");
     setCurrentSceneNumber(null);
@@ -132,6 +171,7 @@ export const StoryAudioPlayer = forwardRef<StoryAudioPlayerHandle, StoryAudioPla
       setState("playing");
       onPlaybackChange?.(true);
       void audioRef.current?.play();
+      if ("speechSynthesis" in window) window.speechSynthesis.resume();
       return;
     }
 
@@ -185,7 +225,10 @@ export const StoryAudioPlayer = forwardRef<StoryAudioPlayerHandle, StoryAudioPla
           if (runRef.current !== runId) return;
 
           if (!url) {
-            await pausableDelay(300, runId);
+            setState("playing");
+            await speakBrowserFallback(line.text);
+            await pausableDelay(200, runId);
+            if (runRef.current !== runId) return;
             previousSpeakerId = line.speakerId;
             continue;
           }
@@ -211,6 +254,7 @@ export const StoryAudioPlayer = forwardRef<StoryAudioPlayerHandle, StoryAudioPla
     onPlaybackChange,
     onSceneChange,
     playAudioUrl,
+    speakBrowserFallback,
     session.scenes,
     state,
     stop,
@@ -221,6 +265,7 @@ export const StoryAudioPlayer = forwardRef<StoryAudioPlayerHandle, StoryAudioPla
   const pause = useCallback(() => {
     isPausedRef.current = true;
     audioRef.current?.pause();
+    if ("speechSynthesis" in window) window.speechSynthesis.pause();
     setState("paused");
   }, []);
 
@@ -245,6 +290,7 @@ export const StoryAudioPlayer = forwardRef<StoryAudioPlayerHandle, StoryAudioPla
     return () => {
       runRef.current += 1;
       audioRef.current?.pause();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       audioCache.forEach((url) => URL.revokeObjectURL(url));
       audioCache.clear();
     };
