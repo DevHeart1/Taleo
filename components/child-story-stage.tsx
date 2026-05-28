@@ -52,6 +52,8 @@ export function ChildStoryStage() {
   const [caption, setCaption] = useState("Press Start and tell me your story idea.");
   const [spokenTranscript, setSpokenTranscript] = useState("");
   const [error, setError] = useState("");
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [textIdea, setTextIdea] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [activeLine, setActiveLine] = useState<NarrationLine | null>(null);
@@ -550,7 +552,7 @@ export function ChildStoryStage() {
       const trimmedTranscript = transcript.trim();
       if (!trimmedTranscript) {
         playCue("error");
-        setError("I couldn’t hear that. Tap Start and try again.");
+        setError("I couldn’t hear that. Tap Start to try again, or type your idea below!");
         setMode("idle");
         setHasStarted(false);
         setIsGenerating(false);
@@ -659,9 +661,17 @@ export function ChildStoryStage() {
       const audio = new Blob(audioChunksRef.current, { type: "audio/webm" });
       const formData = new FormData();
       formData.append("audio", audio);
-      const response = await fetch("/api/stt", { method: "POST", body: formData });
-      const data = (await response.json()) as { transcript?: string };
-      await submitTranscript(data.transcript || "");
+      try {
+        const response = await fetch("/api/stt", { method: "POST", body: formData });
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}`);
+        }
+        const data = (await response.json()) as { transcript?: string };
+        await submitTranscript(data.transcript || "");
+      } catch (err) {
+        console.error("Server STT failed:", err);
+        await submitTranscript("");
+      }
     };
 
     recorder.start();
@@ -722,11 +732,6 @@ export function ChildStoryStage() {
     setSpokenTranscript("");
     playCue("listen");
 
-    if (navigator.mediaDevices && "MediaRecorder" in window) {
-      await startMediaRecorderFallback();
-      return;
-    }
-
     const finishListening = (transcript: string) => {
       if (didSubmitListeningRef.current) return;
       didSubmitListeningRef.current = true;
@@ -763,7 +768,7 @@ export function ChildStoryStage() {
       recognition.onerror = () => {
         didSubmitListeningRef.current = true;
         playCue("error");
-        setError("I couldn’t hear that. Tap Start and try again.");
+        setError("I couldn’t hear that. Tap Start to try again, or type your idea below!");
         setMode("idle");
         setHasStarted(false);
         setIsGenerating(false);
@@ -788,6 +793,10 @@ export function ChildStoryStage() {
       return;
     }
 
+    if (navigator.mediaDevices && "MediaRecorder" in window) {
+      await startMediaRecorderFallback();
+      return;
+    }
   }, [clearListeningTimers, playCue, parentSettings.speechLocale, startMediaRecorderFallback, submitTranscript]);
 
   useEffect(() => {
@@ -819,6 +828,8 @@ export function ChildStoryStage() {
     stopCurrentPlayback();
     clearAssetCaches();
     setStoryEnded(false);
+    setShowTextInput(false);
+    setTextIdea("");
     setSession(null);
     setLastCompletedSession(null);
     setCurrentScene(null);
@@ -868,6 +879,8 @@ export function ChildStoryStage() {
     setMode("idle");
     setHasStarted(false);
     setStoryEnded(false);
+    setShowTextInput(false);
+    setTextIdea("");
     setSession(null);
     setCurrentScene(null);
     setActiveLine(null);
@@ -1022,57 +1035,95 @@ export function ChildStoryStage() {
                 ) : null}
 
                 <div className="idea-right-stack">
-                  <div className="idea-orb-stage">
-                    <VoiceOrb mode={mode} />
-                    <span className="idea-orb-sparkle idea-orb-sparkle-1">+</span>
-                    <span className="idea-orb-sparkle idea-orb-sparkle-2">✦</span>
-                    <span className="idea-orb-sparkle idea-orb-sparkle-3">★</span>
-                    <span className="idea-orb-sparkle idea-orb-sparkle-4">·</span>
-                  </div>
-
-                  {isAiSpeakingPrompt ? (
-                    <div className="idea-speech-bubble" role="status" aria-live="polite">
-                      <p>{speechBubbleLine}</p>
-                    </div>
-                  ) : null}
-
-                  <div className="idea-waveform" aria-hidden="true">
-                    <div className="idea-wave-row idea-wave-row-l">
-                      {leftWaveBars.map((scale, idx) => (
-                        <span
-                          key={`l-${idx}`}
-                          className="idea-wave-bar"
-                          style={{
-                            height: `${scale * 100}%`,
-                            animationDelay: `${idx * 80}ms`,
+                  {showTextInput ? (
+                    <div className="idea-text-input-container">
+                      <textarea
+                        className="idea-textarea"
+                        placeholder="Type what happens in our story... (e.g. A friendly dragon who loves marshmallows)"
+                        value={textIdea}
+                        onChange={(e) => setTextIdea(e.target.value)}
+                        maxLength={300}
+                      />
+                      <div className="idea-text-input-actions">
+                        <button
+                          type="button"
+                          className="idea-text-submit-btn"
+                          onClick={() => {
+                            if (textIdea.trim()) {
+                              void submitTranscript(textIdea);
+                            }
                           }}
-                        />
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      className={`idea-mic-button${isListening ? " idea-mic-button-active" : ""}`}
-                      aria-label="Speak your story idea"
-                      tabIndex={-1}
-                    >
-                      <Mic size={20} strokeWidth={2.4} />
-                    </button>
-                    <div className="idea-wave-row idea-wave-row-r">
-                      {rightWaveBars.map((scale, idx) => (
-                        <span
-                          key={`r-${idx}`}
-                          className="idea-wave-bar"
-                          style={{
-                            height: `${scale * 100}%`,
-                            animationDelay: `${(idx + 4) * 80}ms`,
+                          disabled={!textIdea.trim() || isGenerating}
+                        >
+                          Create Story ✦
+                        </button>
+                        <button
+                          type="button"
+                          className="idea-text-cancel-btn"
+                          onClick={() => {
+                            setShowTextInput(false);
+                            void startListening();
                           }}
-                        />
-                      ))}
+                        >
+                          Use Voice 🎙
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="idea-orb-stage">
+                        <VoiceOrb mode={mode} />
+                        <span className="idea-orb-sparkle idea-orb-sparkle-1">+</span>
+                        <span className="idea-orb-sparkle idea-orb-sparkle-2">✦</span>
+                        <span className="idea-orb-sparkle idea-orb-sparkle-3">★</span>
+                        <span className="idea-orb-sparkle idea-orb-sparkle-4">·</span>
+                      </div>
+
+                      {isAiSpeakingPrompt ? (
+                        <div className="idea-speech-bubble" role="status" aria-live="polite">
+                          <p>{speechBubbleLine}</p>
+                        </div>
+                      ) : null}
+
+                      <div className="idea-waveform" aria-hidden="true">
+                        <div className="idea-wave-row idea-wave-row-l">
+                          {leftWaveBars.map((scale, idx) => (
+                            <span
+                              key={`l-${idx}`}
+                              className="idea-wave-bar"
+                              style={{
+                                height: `${scale * 100}%`,
+                                animationDelay: `${idx * 80}ms`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          className={`idea-mic-button${isListening ? " idea-mic-button-active" : ""}`}
+                          aria-label="Speak your story idea"
+                          tabIndex={-1}
+                        >
+                          <Mic size={20} strokeWidth={2.4} />
+                        </button>
+                        <div className="idea-wave-row idea-wave-row-r">
+                          {rightWaveBars.map((scale, idx) => (
+                            <span
+                              key={`r-${idx}`}
+                              className="idea-wave-bar"
+                              style={{
+                                height: `${scale * 100}%`,
+                                animationDelay: `${(idx + 4) * 80}ms`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {isListening ? (
+                {!showTextInput && isListening ? (
                   <p className="idea-prompt">
                     <span className="idea-prompt-arrow">
                       <ArrowUp size={14} strokeWidth={3} />
@@ -1082,9 +1133,32 @@ export function ChildStoryStage() {
                   </p>
                 ) : null}
 
-                {spokenTranscript ? (
+                {!showTextInput && spokenTranscript ? (
                   <span className="idea-transcript">You said: {spokenTranscript}</span>
                 ) : null}
+
+                {!showTextInput ? (
+                  <button
+                    type="button"
+                    className="idea-toggle-text-btn"
+                    onClick={() => {
+                      setShowTextInput(true);
+                      setError("");
+                      clearListeningTimers();
+                      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+                        mediaRecorderRef.current.stop();
+                      }
+                      try {
+                        recognitionRef.current?.stop();
+                      } catch {}
+                      recognitionRef.current = null;
+                      setMode("idle");
+                    }}
+                  >
+                    ⌨ Type your story idea instead
+                  </button>
+                ) : null}
+
                 {error ? <strong className="idea-error">{error}</strong> : null}
               </section>
             </div>
