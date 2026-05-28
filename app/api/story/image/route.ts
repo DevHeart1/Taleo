@@ -4,6 +4,7 @@ import {
   isPlaceholderImageUrl,
   looksLikeExpiredProneImageUrl,
   StoryImageGenerationError,
+  PLACEHOLDER_IMAGE,
 } from "@/lib/image-provider";
 import { memoryStories } from "@/lib/memory-store";
 import type { ImageQualityTier } from "@/lib/openai-model-config";
@@ -109,12 +110,8 @@ export async function POST(request: Request) {
         },
       );
     } catch (error) {
-      const message =
-        error instanceof StoryImageGenerationError
-          ? error.message
-          : "Image generation failed";
-      console.error("[api/story/image]", error);
-      return NextResponse.json({ error: message }, { status: 502 });
+      console.error("[api/story/image] Image generation failed, falling back to placeholder:", error);
+      scene.imageUrl = PLACEHOLDER_IMAGE;
     }
     session.updatedAt = new Date().toISOString();
     memoryStories.set(session.id, session);

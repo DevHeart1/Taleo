@@ -11,6 +11,7 @@ export function SettingsAvatarLink({ className }: SettingsAvatarLinkProps) {
       className={className ?? "settings-avatar-button"}
       href="/settings"
       aria-label="Parent settings"
+      prefetch={false}
     >
       <Settings className="settings-avatar-icon" size={26} strokeWidth={2.4} aria-hidden />
     </Link>
